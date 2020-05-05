@@ -24,17 +24,18 @@ def actions
     selection = $prompt.select("What would you like to do next?", choices)
 
     if selection == "Add another song"
-        add_songs_to_playlist
+        add_song_to_playlist
     elsif selection == "View playlist"
         view_playlist
     elsif selection == "Delete a song"
-        delete_songs
+        delete_song
     elsif selection == "Exit"
         puts "You're done."
     end
 end
 
 def view_playlist
+    puts "Here is your #{$playlist.name} playlist."
     songs = $playlist.songs
     names = $playlist.songs.map {|song| song.name}
     puts names
@@ -42,22 +43,24 @@ def view_playlist
     actions
 end
 
-def add_songs_to_playlist
-    choices = Song.all
-    selected_song = $prompt.select("Which songs would you like to add to your playlist?", choices.map {|song| song.name})
-    selected_song_object = choices.find {|song| song.name == selected_song}
-    playlistsong = PlaylistSong.create(song_id: selected_song_object.id, playlist_id: $playlist.id)
-
-    actions
-end
-
-def delete_songs
-    choices = $playlist.songs
-    selection = $prompt.select("Which song would you like to delete?", choices.map {|song| song.name})
-    PlaylistSong.delete(selection)
+def add_song_to_playlist
+    all_songs = Song.all
+    selected_song = $prompt.select("Which song would you like to add to your playlist?", all_songs.map {|song| song.name})
+    selected_song_object = all_songs.find {|song| song.name == selected_song}
+    new_playlistsong = PlaylistSong.create(song_id: selected_song_object.id, playlist_id: $playlist.id)
+    binding.pry
 
     view_playlist
-    actions
+end
+
+def delete_song
+    playlist_songs = $playlist.songs
+    selected_song = $prompt.select("Which song would you like to delete?", playlist_songs.map {|song| song.name})
+    selected_song_object = Song.all.find {|song| song.name == selected_song}
+    selected_playlist_song = PlaylistSong.all.find {|playlistsong| playlistsong.song_id == selected_song_object.id}
+    PlaylistSong.destroy(selected_playlist_song.id)
+
+    view_playlist
 end
 
 name = name
@@ -66,5 +69,7 @@ greet_user(name)
 playlist_name = playlist_name
 create_playlist(playlist_name)
 
-add_songs_to_playlist
+add_song_to_playlist
+actions
+actions
 
