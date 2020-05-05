@@ -5,6 +5,7 @@ gem "sinatra-activerecord"
 gem "sqlite3"
 gem "pry"
 gem "require_all"
-gem "tty"
+gem "tty-prompt"
+gem 'equatable', '~> 0.6.0'
 
 # gem "concurrent-ruby-1.0.5"
