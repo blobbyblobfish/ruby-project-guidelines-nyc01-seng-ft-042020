@@ -36,7 +36,6 @@ end
 
 def view_playlist
     puts "Here is your #{$playlist.name} playlist."
-    songs = $playlist.songs
     names = $playlist.songs.map {|song| song.name}
     puts names
 
@@ -48,8 +47,7 @@ def add_song_to_playlist
     selected_song = $prompt.select("Which song would you like to add to your playlist?", all_songs.map {|song| song.name})
     selected_song_object = all_songs.find {|song| song.name == selected_song}
     new_playlistsong = PlaylistSong.create(song_id: selected_song_object.id, playlist_id: $playlist.id)
-    binding.pry
-
+    
     view_playlist
 end
 
@@ -58,7 +56,7 @@ def delete_song
     selected_song = $prompt.select("Which song would you like to delete?", playlist_songs.map {|song| song.name})
     selected_song_object = Song.all.find {|song| song.name == selected_song}
     selected_playlist_song = PlaylistSong.all.find {|playlistsong| playlistsong.song_id == selected_song_object.id}
-    PlaylistSong.destroy(selected_playlist_song.id)
+    PlaylistSong.delete(selected_playlist_song.id)
 
     view_playlist
 end
