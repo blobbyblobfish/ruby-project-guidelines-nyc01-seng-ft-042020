@@ -4,63 +4,130 @@ require 'pry'
 
 $prompt = TTY::Prompt.new
 
+def login_or_signup
+    choices = ["New user", "Returning user"]
+    selection = $prompt.select("Are you a new user or would you like to login?", choices)
 
-def greet_user
-    puts "Please enter your name."
-    name = gets.strip
-    puts "Hello, #{name}"
-    $user = User.create(name: name)
+    if selection == "New user"
+        create_user
+    elsif selection == "Returning user"
+        login
+    end
 end
 
-def create_playlist 
-    puts "Name your playlist."
-    playlist_name = gets.strip
-    puts "Your playlist #{playlist_name} is created."
-    $playlist = Playlist.create(name: playlist_name, user_id: $user.id)
+def create_user
+    username = $prompt.ask("Please create a username.")
+    password = $prompt.mask("Please create a password.")
+
+    if User.all.find {|user| user.username == username}
+        puts "This username was already taken"
+        create_user
+    else
+    User.create(username: username, password: password)
+    end
+
+    login
+end
+
+def login
+    puts "Login"
+    username = $prompt.ask("Enter your username.")
+    password = $prompt.mask("Please enter your password.")
+
+    $user = User.all.find {|user| user.username == username && user.password == password}
+    if $user
+        actions
+    else
+        puts "Your login details were incorrect"
+        login
+    end
 end
 
 def actions
-    choices = ["Add another song", "View playlist", "Delete a song", "Exit"]
+    choices = ["View playlists", "Create a playlist", "Edit a playlist", "Delete a playlist", "Exit"]
     selection = $prompt.select("What would you like to do next?", choices)
 
-    if selection == "Add another song"
-        add_song_to_playlist
-    elsif selection == "View playlist"
-        view_playlist
-    elsif selection == "Delete a song"
-        delete_song
+    if selection == "View playlists"
+        view_playlists
+    elsif selection == "Create a playlist"
+        create_playlist
+    elsif selection == "Edit a playlist"
+        edit_playlist
+    elsif selection == "Delete a playlist"
+        delete_playlist
     elsif selection == "Exit"
         puts "You're done."
     end
 end
 
-def view_playlist
-    puts "Here is your #{$playlist.name} playlist."
-    names = $playlist.songs.map {|song| song.name}
+def create_playlist 
+    playlist_name = $prompt.ask("Name your playlist.")
+    puts "Your playlist #{playlist_name} is created."
+    new_playlist = Playlist.create(name: playlist_name, user_id: $user.id)
+
+    view_playlist(new_playlist.name)
+end
+
+def view_playlists
+    user_playlists = Playlist.all.select{|playlist| playlist.user_id == $user.id}
+    playlist = $prompt.select("Which playlist would you like to view?", user_playlists.map{|playlist| playlist.name})
+
+    view_playlist(playlist)
+end
+
+def view_playlist(playlist)
+    puts "Here is your #{playlist} playlist."
+    selected_playlist_object = Playlist.all.find {|play_list| play_list.name == playlist}
+    names = selected_playlist_object.songs.map {|song| song.name}
+
     puts names
 
     actions
 end
 
-def add_song_to_playlist
+def edit_playlist
+    user_playlists = Playlist.all.select{|playlist| playlist.user_id == $user.id}
+    selected_playlist = $prompt.select("Choose a playlist", user_playlists.map {|playlist| playlist.name})
+    selected_playlist_object = Playlist.all.find {|playlist| playlist.name == selected_playlist}
+
+    choices = ["Add song to playlist", "Delete song from playlist", "Back"]
+    selection = $prompt.select("What would you like to do?", choices)
+
+    if selection == "Add song to playlist"
+        add_song_to_playlist(selected_playlist_object)
+    elsif selection == "Delete song from playlist"
+        delete_song_from_playlist(selected_playlist_object)
+    else
+        actions
+    end
+end
+
+def delete_playlist
+    user_playlists = Playlist.all.select{|playlist| playlist.user_id == $user.id}
+    selected_playlist = $prompt.select("Choose a playlist", user_playlists.map {|playlist| playlist.name})
+    selected_playlist_object = Playlist.all.find {|playlist| playlist.name == selected_playlist}
+    Playlist.destroy(selected_playlist_object.id)
+    actions
+end
+
+def add_song_to_playlist(selected_playlist_object)
     selected_song = $prompt.select("Which song would you like to add to your playlist?", Song.all.map {|song| song.name})
     selected_song_object = Song.all.find {|song| song.name == selected_song}
-    new_playlistsong = PlaylistSong.create(song_id: selected_song_object.id, playlist_id: $playlist.id)
-    
-    view_playlist
+    new_playlistsong = PlaylistSong.create(song_id: selected_song_object.id, playlist_id: selected_playlist_object.id)
 end
 
-def delete_song
-    selected_song = $prompt.select("Which song would you like to delete?", $playlist.songs.map {|song| song.name})
-    selected_song_object = Song.all.find {|song| song.name == selected_song}
-    selected_playlistsong = $playlist.playlist_songs.find {|playlistsong| playlistsong.song_id == selected_song_object.id}
-    PlaylistSong.destroy(selected_playlistsong.id)
-
-    view_playlist
+def delete_song_from_playlist(selected_playlist_object)
+    if selected_playlist_object.songs.count > 0
+        selected_song = $prompt.select("Which song would you like to delete?", selected_playlist_object.songs.map {|song| song.name})
+        selected_song_object = Song.all.find {|song| song.name == selected_song}
+        selected_playlistsong = selected_playlist_object.playlist_songs.find {|playlistsong| playlistsong.song_id == selected_song_object.id}
+        PlaylistSong.destroy(selected_playlistsong.id)
+    else 
+        puts "This playlist is empty."
+        actions
+    end
 end
 
-greet_user
-create_playlist
-add_song_to_playlist
+login_or_signup
 
 
