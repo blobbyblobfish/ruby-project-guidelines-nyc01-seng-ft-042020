@@ -7,5 +7,6 @@ gem "pry"
 gem "require_all"
 gem "tty-prompt"
 gem 'equatable', '~> 0.6.0'
+gem 'rspotify'
 
 # gem "concurrent-ruby-1.0.5"
