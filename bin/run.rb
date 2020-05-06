@@ -70,7 +70,13 @@ end
 
 def view_playlists
     user_playlists = Playlist.all.select{|playlist| playlist.user_id == @user.id}
-    playlist = @prompt.select("Which playlist would you like to view?", user_playlists.map{|playlist| playlist.name})
+
+    if user_playlists
+        playlist = @prompt.select("Which playlist would you like to view?", user_playlists.map{|playlist| playlist.name})
+    else
+        puts "No playlists"
+        actions
+    end
 
     view_playlist(playlist)
 end
@@ -78,9 +84,13 @@ end
 def view_playlist(playlist)
     puts "Here is your #{playlist} playlist."
     selected_playlist_object = Playlist.all.find {|play_list| play_list.name == playlist}
-    names = selected_playlist_object.songs.map {|song| song.name}
 
-    puts names
+    if selected_playlist_object.songs
+        names = selected_playlist_object.songs.map {|song| song.name}
+        puts names
+    else
+        puts "No songs"
+    end
 
     actions
 end
