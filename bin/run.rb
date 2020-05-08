@@ -71,7 +71,7 @@ end
 def view_playlists
     user_playlists = Playlist.all.select{|playlist| playlist.user_id == @user.id}
 
-    if user_playlists
+    if user_playlists.count > 0
         playlist = @prompt.select("Which playlist would you like to view?", user_playlists.map{|playlist| playlist.name})
     else
         puts "No playlists"
