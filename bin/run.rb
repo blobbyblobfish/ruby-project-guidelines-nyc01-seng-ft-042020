@@ -55,7 +55,7 @@ def actions
         edit_playlist
     elsif selection == "Delete a playlist"
         delete_playlist
-    elsif selection == "Exit"
+    else
         puts "You're done."
     end
 end
@@ -73,50 +73,61 @@ def view_playlists
 
     if user_playlists.count > 0
         playlist = @prompt.select("Which playlist would you like to view?", user_playlists.map{|playlist| playlist.name})
+        view_playlist(playlist)
     else
         puts "No playlists"
         actions
     end
-
-    view_playlist(playlist)
 end
 
 def view_playlist(playlist)
-    puts "Here is your #{playlist} playlist."
-    selected_playlist_object = Playlist.all.find {|play_list| play_list.name == playlist}
+    if playlist
+        puts "Here is your #{playlist} playlist."
+        selected_playlist_object = Playlist.all.find {|play_list| play_list.name == playlist}
 
-    if selected_playlist_object.songs
-        names = selected_playlist_object.songs.map {|song| song.name}
-        puts names
-    else
-        puts "No songs"
+        if selected_playlist_object.songs.count > 0
+            names = selected_playlist_object.songs.map {|song| song.name}
+            puts names
+        else
+            puts "No songs"
+        end
     end
-
     actions
 end
 
 def edit_playlist
     user_playlists = Playlist.all.select{|playlist| playlist.user_id == @user.id}
-    selected_playlist = @prompt.select("Choose a playlist", user_playlists.map {|playlist| playlist.name})
-    selected_playlist_object = Playlist.all.find {|playlist| playlist.name == selected_playlist}
 
-    choices = ["Add song to playlist", "Delete song from playlist", "Back"]
-    selection = @prompt.select("What would you like to do?", choices)
+    if user_playlists.count > 0
+        selected_playlist = @prompt.select("Choose a playlist", user_playlists.map {|playlist| playlist.name})
+        selected_playlist_object = Playlist.all.find {|playlist| playlist.name == selected_playlist}
 
-    if selection == "Add song to playlist"
-        add_song_to_playlist(selected_playlist_object)
-    elsif selection == "Delete song from playlist"
-        delete_song_from_playlist(selected_playlist_object)
-    else
+        choices = ["Add song to playlist", "Delete song from playlist", "Back"]
+        selection = @prompt.select("What would you like to do?", choices)
+
+        if selection == "Add song to playlist"
+            add_song_to_playlist(selected_playlist_object)
+        elsif selection == "Delete song from playlist"
+            delete_song_from_playlist(selected_playlist_object)
+        else
+            actions
+        end
+    
+    else 
+        puts "No playlists"
         actions
     end
 end
 
 def delete_playlist
     user_playlists = Playlist.all.select{|playlist| playlist.user_id == @user.id}
-    selected_playlist = @prompt.select("Choose a playlist", user_playlists.map {|playlist| playlist.name})
-    selected_playlist_object = Playlist.all.find {|playlist| playlist.name == selected_playlist}
-    Playlist.destroy(selected_playlist_object.id)
+    if user_playlists.count > 0
+        selected_playlist = @prompt.select("Choose a playlist", user_playlists.map {|playlist| playlist.name})
+        selected_playlist_object = Playlist.all.find {|playlist| playlist.name == selected_playlist}
+        Playlist.destroy(selected_playlist_object.id)
+    else 
+        puts "No playlists"
+    end
     actions
 end
 
